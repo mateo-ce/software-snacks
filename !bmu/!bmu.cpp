@@ -13,7 +13,7 @@ int main(unsigned int argc, char* argv[]) {
 	//FreeConsole();									// Hide console
 	#pragma comment(linker, "/SUBSYSTEM:windows /ENTRY:mainCRTStartup")
 	
-	const std::wstring OPT_EXT = L"mp3";				// File extension to look out for
+	const std::wstring OPT_EXT = L"MP3";				// File extension to look out for
 
 	bool OPT_COPY_FILES = false;						// Copy files, leave folders or move files, delete folders
 	bool OPT_ALWAYS_SEARCH_PROPKEYS = true;				// Search contributing artists even if artist isnt "Various"
@@ -50,10 +50,13 @@ int main(unsigned int argc, char* argv[]) {
 	for (recursive_directory_iterator rdir(CURRENT_PATH), end; rdir != end; ++rdir) {
 		if (!exists(rdir->path())) continue; // Access denied?
 
+		wchar_t* fileExtensionUpr;
+		_wcsupr_s(fileExtensionUpr = _wcsdup(rdir->path().extension().wstring().c_str()), wcslen(rdir->path().extension().wstring().c_str()) + 1);
+
 		// Is it the extension we're looking for?
 		// Ignore them if they're in the directory of the .exe
 		if (!rdir->is_directory()
-		&& rdir->path().extension() == L'.' + OPT_EXT
+		&& std::wstring(fileExtensionUpr).find(L'.' + OPT_EXT) != std::string::npos
 		&& rdir->path().parent_path().wstring() != CURRENT_PATH) {
 			// Check that all the characters before the first space in filename are digits
 			bool considerFile = true;
@@ -190,6 +193,7 @@ int main(unsigned int argc, char* argv[]) {
 				}
 			}
 		}
+		free(fileExtensionUpr);
 	}
 
 	// Delete all root directories of the moved files
