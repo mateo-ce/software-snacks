@@ -1,24 +1,22 @@
 // MCE, 2020
 // WINDOWS 8+
-
-#include <filesystem>		// Basic directory functions
-#include <shobjidl_core.h>	// SHGetPropertyStoreFromParsingName
-#include <propkey.h>		// PKEY IDs
-
-#include <vector>			// For storing parenth paths dinamically
-#include <algorithm>		// std::find
+#include <filesystem> // Basic directory functions
+#include <shobjidl_core.h> // SHGetPropertyStoreFromParsingName
+#include <propkey.h> // PKEY IDs
+#include <vector> // Dynamic arrays
+#include <algorithm> // std::find
 
 using namespace std::filesystem;
 int main(unsigned int argc, char* argv[]) {
-	//FreeConsole();									// Hide console
-	#pragma comment(linker, "/SUBSYSTEM:windows /ENTRY:mainCRTStartup")
+	#pragma comment(linker, "/SUBSYSTEM:windows /ENTRY:mainCRTStartup") // Hide console
 	
-	const std::wstring OPT_EXT = L"MP3";				// File extension to look out for
+	const std::wstring OPT_EXT = L"MP3"; // File extension to look out for
 
-	bool OPT_COPY_FILES = false;						// Copy files, leave folders or move files, delete folders
-	bool OPT_ALWAYS_SEARCH_PROPKEYS = true;				// Search contributing artists even if artist isnt "Various"
+	bool OPT_COPY_FILES = false; // Copy files, leave folders or move files, delete folders
+	bool OPT_ALWAYS_SEARCH_PROPKEYS = true; // Search contributing artists even if artist isnt "Various"
 
-	for (unsigned int i = 1; i < argc; ++i) {			// Parse command line arguments
+	// Parse command line arguments
+	for (unsigned int i = 1; i < argc; ++i) {
 		if (std::string(argv[i]) == "-cf") {
 			OPT_COPY_FILES = true;
 		} else if (std::string(argv[i]) == "-nsp") {
@@ -26,24 +24,20 @@ int main(unsigned int argc, char* argv[]) {
 		}
 	}
 
-	const std::wstring FILENAME_FILTER[] = {L"FEAT",	// Ignore featured artists in files that trigger this filter
-											L"FT.",
-											L"COVER",
-											L"REMIX",
-											L"EDIT",
-											L"FLIP" };
+	// Ignore featured artists in files that trigger this filter
+	const std::wstring FILENAME_FILTER[] = { L"FEATURING", L"FEAT ", L"FEAT.", L"FT.", L"COVER", L"REMIX", L"EDIT", L"FLIP" };
 	
-	std::vector<std::wstring> parentPaths;				// Store the parent paths of folders for deletion
+	std::vector<std::wstring> parentPaths; // Store the parent paths of folders for deletion
 
 	// Get our current directory
-	TCHAR currentDirectoryBuffer[MAX_PATH];
-	GetCurrentDirectory(MAX_PATH, currentDirectoryBuffer);
+	TCHAR currentDirectoryBuffer[260];
+	GetCurrentDirectoryW(260, currentDirectoryBuffer);
 	
 	std::wstring CURRENT_PATH = currentDirectoryBuffer;	// Store current directory
 	CURRENT_PATH.push_back(L'\\');
 
 	// Try to initialize a COM interface
-	const HRESULT CI_HR = CoInitialize(NULL);
+	const HRESULT CI_HR = CoInitialize(0);
 	if (FAILED(CI_HR)) return -1;
 
 	// Recursively search all the children of our parent path, including invisible ones
@@ -64,7 +58,10 @@ int main(unsigned int argc, char* argv[]) {
 			for (const wchar_t &wc : rdir->path().filename().wstring()) {
 				nc++;
 				if (wc == L' ') break;
-				if (!isdigit(wc)) { considerFile = false; break; }
+				if (!isdigit(wc)) {
+					considerFile = false;
+					break;
+				}
 			}
 
 			if (considerFile) {
@@ -82,9 +79,8 @@ int main(unsigned int argc, char* argv[]) {
 				std::wstring realArtist = L"";
 
 				// Add a call to get the file property keys, because of GPS_DELAYCREATION, this isnt called right now
-				IPropertyStore* filePropertyStore = NULL;
-				const HRESULT SH_HR = SHGetPropertyStoreFromParsingName(rdir->path().wstring().c_str(),
-									NULL, GPS_DELAYCREATION, IID_IPropertyStore, (void**)&filePropertyStore);
+				IPropertyStore* filePropertyStore = 0;
+				const HRESULT SH_HR = SHGetPropertyStoreFromParsingName(rdir->path().wstring().c_str(), 0, GPS_DELAYCREATION, IID_IPropertyStore, (void**)&filePropertyStore);
 
 				// Not sure under which circumstances SHGPSFPN can fail,
 				// or if this will trigger later due to GPS_DELAYCREATION.
@@ -98,18 +94,18 @@ int main(unsigned int argc, char* argv[]) {
 				if (fileName == L"Various Artists" || fileName == L"Varios Artistas") {
 					filePropertyStore->GetValue(PKEY_Music_AlbumArtist, &albumArtist);
 
-					if (albumArtist.pwszVal != NULL
-						&& wcscmp(albumArtist.pwszVal, L"Various Artists") != 0
-						&& wcscmp(albumArtist.pwszVal, L"Varios Artistas") != 0) {
-						// RA IS IN AA
+					if (albumArtist.pwszVal != 0
+					&& wcscmp(albumArtist.pwszVal, L"Various Artists") != 0
+					&& wcscmp(albumArtist.pwszVal, L"Varios Artistas") != 0) {
+						// Real artist IS IN AA
 						realArtist = albumArtist.pwszVal;
 					} else {
 						filePropertyStore->GetValue(PKEY_Music_Artist, &contributingArtist);
 
-						if (contributingArtist.pwszVal != NULL
-							&& wcscmp(contributingArtist.calpwstr.pElems[0], L"Various Artists") != 0
-							&& wcscmp(contributingArtist.calpwstr.pElems[0], L"Varios Artistas") != 0) {
-							// RA IS IN CA
+						if (contributingArtist.pwszVal != 0
+						&& wcscmp(contributingArtist.calpwstr.pElems[0], L"Various Artists") != 0
+						&& wcscmp(contributingArtist.calpwstr.pElems[0], L"Varios Artistas") != 0) {
+							// Real artist IS IN CA
 							realArtist = contributingArtist.calpwstr.pElems[0];
 						} else {
 							// GIVE UP
@@ -129,12 +125,12 @@ int main(unsigned int argc, char* argv[]) {
 				std::wstring featuredArtist = L"";
 				if (OPT_ALWAYS_SEARCH_PROPKEYS) PropVariantInit(&contributingArtist);
 
-				// 1
-				if (OPT_ALWAYS_SEARCH_PROPKEYS && contributingArtist.pwszVal == NULL) {
+				// 1.
+				if (OPT_ALWAYS_SEARCH_PROPKEYS && contributingArtist.pwszVal == 0) {
 					wchar_t* fileNameUpr;
 					_wcsupr_s(fileNameUpr = _wcsdup(rdir->path().filename().wstring().c_str()), wcslen(rdir->path().filename().wstring().c_str()) + 1);
 
-					// 2
+					// 2.
 					bool considerRename = true;
 					for (const std::wstring& ws : FILENAME_FILTER) {
 						if (std::wstring(fileNameUpr).find(ws) != std::string::npos) {
@@ -146,7 +142,7 @@ int main(unsigned int argc, char* argv[]) {
 					if (considerRename) {
 						filePropertyStore->GetValue(PKEY_Music_Artist, &contributingArtist);
 
-						if (contributingArtist.pwszVal != NULL && contributingArtist.calpwstr.pElems[0] != NULL) {
+						if (contributingArtist.pwszVal != 0 && contributingArtist.calpwstr.pElems[0] != 0) {
 							featuredArtist = contributingArtist.calpwstr.pElems[0];
 							wchar_t* featuredArtistUpr;
 							wchar_t* realArtistUpr;
@@ -167,7 +163,7 @@ int main(unsigned int argc, char* argv[]) {
 							free(realArtistUpr);
 							free(featuredArtistUpr);
 
-							// 3
+							// 3.
 							if (!featuredArtist.empty()) featuredArtist = L" (ft. " + featuredArtist + L')';
 						}
 					}
@@ -183,9 +179,9 @@ int main(unsigned int argc, char* argv[]) {
 				// Now that we have a filename, lets copy/move it to current path
 				const path FINAL_PATH = CURRENT_PATH + finalName;
 				if (OPT_COPY_FILES) {
-					CopyFile(rdir->path().wstring().c_str(), FINAL_PATH.c_str(), FALSE);
+					CopyFileW(rdir->path().wstring().c_str(), FINAL_PATH.c_str(), 0);
 				} else {
-					const bool FM_BOOL = MoveFile(rdir->path().wstring().c_str(), FINAL_PATH.c_str());
+					const bool FM_BOOL = MoveFileW(rdir->path().wstring().c_str(), FINAL_PATH.c_str());
 					if (FM_BOOL && !fileName.empty()
 					&& (std::find(parentPaths.begin(), parentPaths.end(), fileName) == parentPaths.end())) {
 						parentPaths.push_back(fileName);
@@ -203,15 +199,15 @@ int main(unsigned int argc, char* argv[]) {
 			pathToDelete.push_back(L'\0');
 
 			SHFILEOPSTRUCT FO_D = {
-				NULL,
-				FO_DELETE,
+				0,
+				0x0003, // FO_DELETE
 				pathToDelete.c_str(),
-				NULL,
-				FOF_NOCONFIRMATION | FOF_NOERRORUI | FOF_SILENT,
-				NULL
+				0,
+				0x0010 | 0x0400 | 0x0004, // FOF_NOCONFIRMATION | FOF_NOERRORUI | FOF_SILENT
+				0
 			};
 
-			SHFileOperation(&FO_D);
+			SHFileOperationW(&FO_D);
 		}
 	}
 
