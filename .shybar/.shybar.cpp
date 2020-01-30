@@ -14,7 +14,7 @@ int _stdcall EnumWindowsProc(HWND whwnd, long lparam) {
 	const int windowTextLength = GetWindowTextLengthW(whwnd);
 	if (windowTextLength == 0) return 1;
 
-	// Skip Progman and CoreWindow
+	// Skip UWP windows
 	char windowClassName[256];
 	GetClassNameA(whwnd, windowClassName, 256);
 
@@ -131,6 +131,7 @@ int main(unsigned int argc, char* argv[]) {
 	if (!SHAppBarMessage(0x00000005, &appBarData)) return -1; // (ABM_GETTASKBARPOS, ...)
 
 	MSG appMsg = { 0 }; // Create a message queue
+	bool keyDoExpand = false;
 	bool mustDoExpand = false;
 
 	while (1) {
@@ -147,11 +148,23 @@ int main(unsigned int argc, char* argv[]) {
 			if (appBarData.hWnd == 0) Sleep(1000);
 		}
 
+		// Show taskbar if the start menu is open
+		if (OPT_EXPAND_ON_START) {
+			BOOL startMenuVisible = false;
+			appVisibility->IsLauncherVisible(&startMenuVisible);
+
+			if (startMenuVisible) {
+				mustDoExpand = true;
+			} else {
+				mustDoExpand = false;
+			};
+		}
+
 		// If the thread has QS_HOTKEY in queue
 		if (GetQueueStatus(0x0080)) {
 			// Set the taskbar to always show
 			if (PeekMessageW(&appMsg, 0, 0, 0, 0x0001)) { // (..., PM_REMOVE)
-				if (appMsg.message == 0x0312) mustDoExpand = !mustDoExpand; // (... == WM_HOTKEY)
+				if (appMsg.message == 0x0312) keyDoExpand = !keyDoExpand; // (... == WM_HOTKEY)
 			}
 		}
 
@@ -202,20 +215,12 @@ int main(unsigned int argc, char* argv[]) {
 			}
 		}
 
-		// Show taskbar if the start menu is open
-		if (OPT_EXPAND_ON_START) {
-			BOOL startMenuVisible = false;
-			appVisibility->IsLauncherVisible(&startMenuVisible);
-
-			if (startMenuVisible) mustDoExpand = true;
-		}
-
 		// Check if the cursor is hovering a taskbar child
 		const HWND cursorPosChildHWND = ChildWindowFromPoint(appBarData.hWnd, POINT { cursorPOINT.x - tbCurrentRECT.left, cursorPOINT.y - tbCurrentRECT.top });
 
 		// If the cursor is in a hotspot and above a child of the taskbar, show it
 		// Otherwise, if the cursor point is not above a child, hide it
-		if (canDoExpand || mustDoExpand || (isCursorInHotspot && cursorPosChildHWND != 0)) {
+		if (canDoExpand || mustDoExpand || keyDoExpand || (isCursorInHotspot && cursorPosChildHWND != 0)) {
 			ShowWindow(appBarData.hWnd, 5);
 		} else if (IsWindowVisible(appBarData.hWnd) && !isCursorInHotspot && cursorPosChildHWND == 0) {
 			ShowWindow(appBarData.hWnd, 0);
