@@ -1,11 +1,11 @@
 <img src="https://github.com/mateo-ce/software-snacks/blob/master/.shybar/icon.png?raw=true" width="80"></img>
 ### \.shybar
 
-#### Hides the taskbar and only shows it when certain conditions are met\. Can check if the mouse is inside a corner hotspot\, a window is occupying the taskbar area\, or if the start menu is open\.
+#### Hides the taskbar and only shows it when certain conditions are met\. Checks if the mouse is inside a corner hotspot\, a window is occupying the taskbar area\, or if the start menu is open\.
 
 **Command line arguments:**
 - `-hs (int)` sets the corner hotpsot size (in pixels). Minimum is 1 and maximum is 25. `(DEFAULT: 4)`
-- `-sm (int)` changes the main loops sleep time (in miliseconds) to the ones specified. `(DEFAULT: 50)`
+- `-sm (int)` changes the main loop sleep time (in miliseconds) to the ones specified. `(DEFAULT: 50)`
 - `-nae` keeps the taskbar hidden even if there is free space for it to expand.
 - `-nse` to keep the taskbar hidden even if the start menu is open.
 
