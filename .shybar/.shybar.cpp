@@ -5,8 +5,8 @@
 #include <shobjidl_core.h> // IAppVisibility
 
 // Callback function from EnumDesktopWindows
-// int BOOL, _stdcall CALLBACK (..., long* LPARAM)
-int _stdcall EnumWindowsProc(HWND whwnd, long lparam) {
+// int BOOL, _stdcall CALLBACK (..., LPARAM)
+int _stdcall EnumWindowsProc(HWND whwnd, LONG_PTR lparam) {
 	// If the window is hidden, minimized or Progman skip it
 	if (!IsWindowVisible(whwnd) || IsIconic(whwnd) || GetShellWindow() == whwnd) return 1;
 
@@ -61,7 +61,7 @@ int main(unsigned int argc, char* argv[]) {
 	#pragma comment(linker, "/SUBSYSTEM:windows /ENTRY:mainCRTStartup") // Hide console
 
 	// Register ALT + F1 hotkey to force-show
-	if (!RegisterHotKey(0, 1, 0x0001 | 0x4000, 0x70)) return -1;
+	if (!RegisterHotKey(0, 1, 0x0001 | 0x0002 | 0x4000, 0x70)) return -1;
 	
 	// Corner size in which the mouse must be to consider showing the taskbar
 	// Can be a maximum of 25 and a minimum of 1, it should never exceed the taskbars minimum size
@@ -131,8 +131,9 @@ int main(unsigned int argc, char* argv[]) {
 	if (!SHAppBarMessage(0x00000005, &appBarData)) return -1; // (ABM_GETTASKBARPOS, ...)
 
 	MSG appMsg = { 0 }; // Create a message queue
-	bool keyDoExpand = false;
-	bool mustDoExpand = false;
+
+	bool hotkeyDoExpand = false;
+	bool isStartOpen = false;
 
 	while (1) {
 		// Check if the taskbar handle is still valid, and if not, try to get a new one
@@ -148,23 +149,11 @@ int main(unsigned int argc, char* argv[]) {
 			if (appBarData.hWnd == 0) Sleep(1000);
 		}
 
-		// Show taskbar if the start menu is open
-		if (OPT_EXPAND_ON_START) {
-			BOOL startMenuVisible = false;
-			appVisibility->IsLauncherVisible(&startMenuVisible);
-
-			if (startMenuVisible) {
-				mustDoExpand = true;
-			} else {
-				mustDoExpand = false;
-			};
-		}
-
 		// If the thread has QS_HOTKEY in queue
 		if (GetQueueStatus(0x0080)) {
 			// Set the taskbar to always show
 			if (PeekMessageW(&appMsg, 0, 0, 0, 0x0001)) { // (..., PM_REMOVE)
-				if (appMsg.message == 0x0312) keyDoExpand = !keyDoExpand; // (... == WM_HOTKEY)
+				if (appMsg.message == 0x0312) hotkeyDoExpand = !hotkeyDoExpand; // (... == WM_HOTKEY)
 			}
 		}
 
@@ -200,8 +189,15 @@ int main(unsigned int argc, char* argv[]) {
 		// Enumerate all desktop windows in EnumWindowsProc callback
 		if (OPT_AUTO_EXPAND) {
 			HWND tbEnumHWND = appBarData.hWnd;
-			EnumDesktopWindows(nullptr, &EnumWindowsProc, (long) &tbEnumHWND);
+			EnumDesktopWindows(nullptr, &EnumWindowsProc, (LONG_PTR) &tbEnumHWND);
 			if (tbEnumHWND != 0) canDoExpand = true;
+		}
+
+		// Show taskbar if the start menu is open
+		if (OPT_EXPAND_ON_START) {
+			BOOL startMenuVisible = false;
+			appVisibility->IsLauncherVisible(&startMenuVisible);
+			isStartOpen = startMenuVisible ? true : false;
 		}
 
 		// Check if cursor is inside a hotspot
@@ -220,7 +216,7 @@ int main(unsigned int argc, char* argv[]) {
 
 		// If the cursor is in a hotspot and above a child of the taskbar, show it
 		// Otherwise, if the cursor point is not above a child, hide it
-		if (canDoExpand || mustDoExpand || keyDoExpand || (isCursorInHotspot && cursorPosChildHWND != 0)) {
+		if ((isCursorInHotspot && cursorPosChildHWND != 0) || hotkeyDoExpand || canDoExpand || isStartOpen ) {
 			ShowWindow(appBarData.hWnd, 5);
 		} else if (IsWindowVisible(appBarData.hWnd) && !isCursorInHotspot && cursorPosChildHWND == 0) {
 			ShowWindow(appBarData.hWnd, 0);
