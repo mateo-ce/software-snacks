@@ -9,7 +9,7 @@
 - `-nae` keeps the taskbar hidden even if there is free space for it to expand.
 - `-nse` to keep the taskbar hidden even if the start menu is open.
 
-You can also force the taskbar to expand by using **ALT + F1** 
+You can also force the taskbar to expand by using **CTRL + ALT + F1** 
 
 &nbsp;
 
