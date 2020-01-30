@@ -4,10 +4,10 @@
 #### Hides the taskbar and only shows it when certain conditions are met\. Checks if the mouse is inside a corner hotspot\, a window is occupying the taskbar area\, or if the start menu is open\.
 
 **Command line arguments:**
-- `-hs (int)` sets the corner hotpsot size (in pixels). Minimum is 1 and maximum is 25. `(DEFAULT: 4)`
-- `-sm (int)` changes the main loop sleep time (in miliseconds) to the ones specified. `(DEFAULT: 50)`
-- `-nae` keeps the taskbar hidden even if there is free space for it to expand.
-- `-nse` to keep the taskbar hidden even if the start menu is open.
+- `-hs (int)` (hotspot) sets the corner hotpsot size (in pixels). Minimum is 1 and maximum is 25. `(DEFAULT: 4)`
+- `-sm (int)` (set miliseconds) changes the main loop sleep time (in miliseconds) to the time specified. `(DEFAULT: 50)`
+- `-nae` (no auto expand) keeps the taskbar hidden even if there is free space for it to expand.
+- `-nse` (no start expand) to keep the taskbar hidden even if the start menu is open.
 
 You can also force the taskbar to expand using **LALT + F1** 
 
@@ -21,8 +21,8 @@ ___
 #### Searches for \.mp3 files in subdirectories\, renames them to their root parent\, and moves\/copies them to the path it was executed in\.
 
 **Command line arguments:**
-- `-nsp` to ignore propety keys in files that already have a main artist, heavily improving performance.
-- `-cf` to copy the files instead of moving them and deleting their parent directory.
+- `-nsp` (no search propkeys) to ignore propety keys in files that already have a main artist, heavily improving performance.
+- `-cf`(copy files) to copy the files instead of moving them and deleting their parent directory.
 
 
 &nbsp;
