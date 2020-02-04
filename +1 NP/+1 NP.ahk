@@ -2,6 +2,12 @@
 #SingleInstance Force
 #NoTrayIcon
 
+>^>+Enter::OnKeyPress("NumpadEnter")
+>^>+Backspace::OnKeyPress("NumpadDel")
+>^>+=::OnKeyPress("NumpadAdd")
+>^>+-::OnKeyPress("NumpadSub")
+>^>+.::OnKeyPress("NumpadDot")
+
 >^>+Up::OnKeyPress("NumpadUp")
 >^>+Down::OnKeyPress("NumpadDown")
 >^>+Left::OnKeyPress("NumpadLeft")
@@ -19,6 +25,12 @@
 >^>+9::OnNumPress("Numpad9")
 
 #if (GetKeyState("CapsLock", "T"))
+	Enter::OnKeyPress("NumpadEnter")
+	Backspace::OnKeyPress("NumpadDel")
+	=::OnKeyPress("NumpadAdd")
+	-::OnKeyPress("NumpadSub")
+	.::OnKeyPress("NumpadDot")
+
 	Up::OnKeyPress("NumpadUp")
 	Down::OnKeyPress("NumpadDown")
 	Left::OnKeyPress("NumpadLeft")
