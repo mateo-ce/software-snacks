@@ -32,6 +32,6 @@ ___
 <img src="https://github.com/mateo-ce/software-snacks/blob/master/+1%20NP/icon.png?raw=true" width="80"></img>
 ### +1 NP
 
-#### Adds numpad functionality to the top number row, special keys and arrow keys when caps lock is on.
+#### Adds numpad functionality to the top number row and arrow keys when caps lock is on.
 
-You can also activate this functionality temporarily by using **RCTRL + RSHIFT** 
+You can also activate this functionality for the above and also special keys temporarily by using **RCTRL + RSHIFT** 
