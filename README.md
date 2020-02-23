@@ -1,4 +1,6 @@
-<img src="https://github.com/mateo-ce/software-snacks/blob/master/.shybar/icon.png?raw=true" width="80"></img>
+###### CLICK ANY OF THE IMAGES TO AUTOMATICALLY DOWNLOAD THEIR EXECUTABLES
+<a href="https://github.com/mateo-ce/software-snacks/raw/master/.shybar/.shybar.exe"><img src="https://github.com/mateo-ce/software-snacks/blob/master/.shybar/icon.png?raw=true" width="80"></img></a>
+
 ### \.shybar
 
 #### Hides the taskbar and only shows it when certain conditions are met\. Checks if the mouse is inside a corner hotspot\, a window is occupying the taskbar area\, or if the start menu is open\.
@@ -15,7 +17,8 @@ You can also force the taskbar to expand by using **CTRL + ALT + F1**
 
 
 ___
-<img src="https://github.com/mateo-ce/software-snacks/blob/master/!bmu/icon.png?raw=true" width="80"></img>
+<a href="https://github.com/mateo-ce/software-snacks/raw/master/!bmu/!bmu.exe"><img src="https://github.com/mateo-ce/software-snacks/blob/master/!bmu/icon.png?raw=true" width="80"></img></a>
+
 ### !bmu
 
 #### Searches for \.mp3 files in subdirectories\, renames them to their root parent\, and moves\/copies them to the path it was executed in\.
@@ -29,7 +32,8 @@ ___
 
 
 ___
-<img src="https://github.com/mateo-ce/software-snacks/blob/master/+1%20NP/icon.png?raw=true" width="80"></img>
+<a href="https://github.com/mateo-ce/software-snacks/raw/master/%2B1%20NP/%2B1%20NP.exe"><img src="https://github.com/mateo-ce/software-snacks/blob/master/+1%20NP/icon.png?raw=true" width="80"></img></a>
+
 ### +1 NP
 
 #### Adds numpad functionality to the top number row and arrow keys when caps lock is on.
