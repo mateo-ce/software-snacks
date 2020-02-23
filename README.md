@@ -1,5 +1,5 @@
 ###### `CLICK ANY OF THE IMAGES TO AUTOMATICALLY DOWNLOAD THEIR EXECUTABLES`
-___
+
 <a href="https://github.com/mateo-ce/software-snacks/raw/master/.shybar/.shybar.exe"><img src="https://github.com/mateo-ce/software-snacks/blob/master/.shybar/icon.png?raw=true" width="80"></img></a>
 
 ### \.shybar
