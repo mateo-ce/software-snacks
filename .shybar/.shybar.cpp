@@ -18,7 +18,8 @@ int _stdcall EnumWindowsProc(HWND whwnd, LONG_PTR lparam) {
 	char windowClassName[256];
 	GetClassNameA(whwnd, windowClassName, 256);
 
-	if (strcmp(windowClassName, "Windows.UI.Core.CoreWindow") == 0) return 1;
+	if ((strcmp(windowClassName, "Windows.UI.Core.CoreWindow") == 0)
+	|| (strcmp(windowClassName, "ApplicationFrameWindow") == 0)) return 1;
 	
 	// We have a valid window, lets check if its in the taskbar area
 	// Get window position and size
@@ -204,7 +205,9 @@ int main(unsigned int argc, char* argv[]) {
 		bool isCursorInHotspot = false;
 		POINT cursorPOINT;
 
-		if (GetCursorPos(&cursorPOINT)) {
+		bool didGetCursorPos = GetCursorPos(&cursorPOINT);
+
+		if (didGetCursorPos) {
 			if ((cursorPOINT.x < OPT_HOTSPOT_SIZE || cursorPOINT.x > DESKTOP_WIDTH - OPT_HOTSPOT_SIZE)
 			&& (cursorPOINT.y < OPT_HOTSPOT_SIZE || cursorPOINT.y > DESKTOP_HEIGHT - OPT_HOTSPOT_SIZE)) {
 				isCursorInHotspot = true;
@@ -216,7 +219,7 @@ int main(unsigned int argc, char* argv[]) {
 
 		// If the cursor is in a hotspot and above a child of the taskbar, show it
 		// Otherwise, if the cursor point is not above a child, hide it
-		if ((isCursorInHotspot && cursorPosChildHWND != 0) || hotkeyDoExpand || canDoExpand || isStartOpen ) {
+		if ((didGetCursorPos && isCursorInHotspot && cursorPosChildHWND != 0) || hotkeyDoExpand || canDoExpand || isStartOpen ) {
 			ShowWindow(appBarData.hWnd, 5);
 		} else if (IsWindowVisible(appBarData.hWnd) && !isCursorInHotspot && cursorPosChildHWND == 0) {
 			ShowWindow(appBarData.hWnd, 0);
