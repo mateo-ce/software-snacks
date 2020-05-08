@@ -1,5 +1,5 @@
 // MCE, 2020
-// WINDOWS 8+
+// WINDOWS 8+ x64
 #include <windows.h> // WinAPI
 #include <string> // std::string type
 #include <shobjidl_core.h> // IAppVisibility
@@ -18,8 +18,7 @@ int _stdcall EnumWindowsProc(HWND whwnd, LONG_PTR lparam) {
 	char windowClassName[256];
 	GetClassNameA(whwnd, windowClassName, 256);
 
-	if ((strcmp(windowClassName, "Windows.UI.Core.CoreWindow") == 0)
-	|| (strcmp(windowClassName, "ApplicationFrameWindow") == 0)) return 1;
+	if (strcmp(windowClassName, "Windows.UI.Core.CoreWindow") == 0) return 1;
 	
 	// We have a valid window, lets check if its in the taskbar area
 	// Get window position and size
@@ -61,8 +60,9 @@ int _stdcall EnumWindowsProc(HWND whwnd, LONG_PTR lparam) {
 int main(unsigned int argc, char* argv[]) {
 	#pragma comment(linker, "/SUBSYSTEM:windows /ENTRY:mainCRTStartup") // Hide console
 
-	// Register ALT + F1 hotkey to force-show
-	if (!RegisterHotKey(0, 1, 0x0001 | 0x0002 | 0x4000, 0x70)) return -1;
+	if (!RegisterHotKey(0, 1, 0x0001 | 0x0002 | 0x4000, 0x70)) return -1; // CTRL + ALT + F1, hotkeyDoExpand
+	if (!RegisterHotKey(0, 2, 0x0001 | 0x0002 | 0x4000, 0x71)) return -1; // CTRL + ALT + F2, hotkeyNoFocus
+	if (!RegisterHotKey(0, 3, 0x0001 | 0x0002 | 0x4000, 0x74)) return -1; // CTRL + ALT + F5, hotkeyContinueExecution
 	
 	// Corner size in which the mouse must be to consider showing the taskbar
 	// Can be a maximum of 25 and a minimum of 1, it should never exceed the taskbars minimum size
@@ -70,6 +70,7 @@ int main(unsigned int argc, char* argv[]) {
 	int OPT_SLEEP_MS = 50; // How much time to sleep until we execute the next loop
 	bool OPT_AUTO_EXPAND = true; // Expand the taskbar when no window is occupying its place?
 	bool OPT_EXPAND_ON_START = true; // Expand and set the taskbar to alwaysontop when the start window is present?
+	bool OPT_SET_FOREGROUND = true; // Steal focus from current window?
 
 	// Parse command line arguments
 	for (unsigned int i = 1; i < argc; ++i) {
@@ -87,6 +88,8 @@ int main(unsigned int argc, char* argv[]) {
 			OPT_AUTO_EXPAND = false;
 		} else if (std::string(argv[i]) == "-nse") {
 			OPT_EXPAND_ON_START = false;
+		} else if (std::string(argv[i]) == "-nsf") {
+			OPT_SET_FOREGROUND = false;
 		}
 	}
 
@@ -134,9 +137,12 @@ int main(unsigned int argc, char* argv[]) {
 	MSG appMsg = { 0 }; // Create a message queue
 
 	bool hotkeyDoExpand = false;
+	bool hotkeyNoFocus = false;
+	bool hotkeyContinueExecution = true;
+
 	bool isStartOpen = false;
 
-	while (1) {
+	while (hotkeyContinueExecution) {
 		// Check if the taskbar handle is still valid, and if not, try to get a new one
 		while (!IsWindow(appBarData.hWnd)) {
 			for (unsigned int i = 0; i != 4; i++) {
@@ -152,9 +158,14 @@ int main(unsigned int argc, char* argv[]) {
 
 		// If the thread has QS_HOTKEY in queue
 		if (GetQueueStatus(0x0080)) {
-			// Set the taskbar to always show
 			if (PeekMessageW(&appMsg, 0, 0, 0, 0x0001)) { // (..., PM_REMOVE)
-				if (appMsg.message == 0x0312) hotkeyDoExpand = !hotkeyDoExpand; // (... == WM_HOTKEY)
+				if (appMsg.message == 0x0312) { // (... == WM_HOTKEY)
+					switch (appMsg.wParam) {
+						case 1: hotkeyDoExpand = !hotkeyDoExpand; break;
+						case 2: hotkeyNoFocus = !hotkeyNoFocus; break;
+						case 3: hotkeyContinueExecution = false; break;
+					}
+				}
 			}
 		}
 
@@ -181,7 +192,7 @@ int main(unsigned int argc, char* argv[]) {
 		int tbNewPosY = min(max(appBarData.rc.top, 0), DESKTOP_HEIGHT - (appBarData.rc.bottom - appBarData.rc.top));
 
 		if (tbCurrentRECT.left + tbCurrentRECT.top != tbNewPosX + tbNewPosY) {
-			SetWindowPos(appBarData.hWnd, HWND_TOP, tbNewPosX, tbNewPosY, -1, -1, 0x0001 | 0x00400);
+			SetWindowPos(appBarData.hWnd, HWND_TOPMOST, tbNewPosX, tbNewPosY, -1, -1, 0x0001 | 0x00400);
 		}
 
 		// Auto expand the taskbar when no window is occupying its space
@@ -220,7 +231,23 @@ int main(unsigned int argc, char* argv[]) {
 		// If the cursor is in a hotspot and above a child of the taskbar, show it
 		// Otherwise, if the cursor point is not above a child, hide it
 		if ((didGetCursorPos && isCursorInHotspot && cursorPosChildHWND != 0) || hotkeyDoExpand || canDoExpand || isStartOpen ) {
+			// Neat alpha fade in
+			if (!IsWindowVisible(appBarData.hWnd)) BringWindowToTop(appBarData.hWnd);
+
 			ShowWindow(appBarData.hWnd, 5);
+
+			// Specifies the state of the machine for the current user
+			QUERY_USER_NOTIFICATION_STATE pquns;
+			SHQueryUserNotificationState(&pquns);
+
+			// Chromium and other desktop apps that dont avide by Windows standards trigger QUNS_BUSY
+			// ... games however, usually trigger QUNS_RUNNING_D3D_FULL_SCREEN
+			// There's a setting and a hotkey to pause this feature in case it isn't working as intended.
+			if ((pquns == QUNS_BUSY) && !(pquns == QUNS_RUNNING_D3D_FULL_SCREEN)
+			&& OPT_SET_FOREGROUND && !hotkeyNoFocus) {
+				SetForegroundWindow(appBarData.hWnd);
+			}
+
 		} else if (IsWindowVisible(appBarData.hWnd) && !isCursorInHotspot && cursorPosChildHWND == 0) {
 			ShowWindow(appBarData.hWnd, 0);
 		}
@@ -228,6 +255,5 @@ int main(unsigned int argc, char* argv[]) {
 		Sleep(OPT_SLEEP_MS);
 	}
 
-	// We should never get here
-	return -1;
+	return 0;
 }
