@@ -1,4 +1,6 @@
-###### `CLICK ANY OF THE IMAGES TO AUTOMATICALLY DOWNLOAD THEIR EXECUTABLES`
+<p align="center">
+- CLICK ANY OF THE IMAGES TO AUTOMATICALLY DOWNLOAD THEIR EXECUTABLES -
+</p>
 &nbsp;
 &nbsp;
 
@@ -13,8 +15,13 @@
 - `-sm (int)` changes the main loop sleep time (in miliseconds) to the time specified. `(DEFAULT: 50)`
 - `-nae` keeps the taskbar hidden even if there is free space for it to expand.
 - `-nse` to keep the taskbar hidden even if the start menu is open.
+- `-nsf` to disable the taskbar stealing focus when needed.
 
-You can also force the taskbar to expand by using **CTRL + ALT + F1** 
+**Hotkeys:**
+**CTRL + ALT + ...** 
+- `F1` Forces the taskbar to expand.
+- `F2` Pauses the focus functionality.
+- `F5` Stops the application.
 
 &nbsp;
 
